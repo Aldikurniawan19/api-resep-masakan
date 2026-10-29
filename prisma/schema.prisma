@@ -1,0 +1,141 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum RecipeScope {
+  INDONESIA
+  INTERNATIONAL
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  recipes Recipe[]
+
+  @@map("categories")
+}
+
+model CuisineType {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  recipes Recipe[]
+
+  @@map("cuisine_types")
+}
+
+model Recipe {
+  id              String       @id @default(uuid())
+  recipeNumber    Int          @unique @map("recipe_number")
+  title           String
+  name            String
+  slug            String       @unique
+  scope           RecipeScope
+  origin          String?
+  visualRef       String?      @map("visual_ref")
+  imageUrl        String?      @map("image_url")
+  prepTimeMinutes Int?         @map("prep_time_minutes")
+  cookTimeMinutes Int?         @map("cook_time_minutes")
+  servings        Int?         @default(4)
+  difficulty      Difficulty   @default(MEDIUM)
+  spicinessLevel  Int          @default(0) @map("spiciness_level")
+  categoryId      String       @map("category_id")
+  cuisineTypeId   String       @map("cuisine_type_id")
+  rawContent      String       @db.Text @map("raw_content")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  category         Category          @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  cuisineType      CuisineType       @relation(fields: [cuisineTypeId], references: [id], onDelete: Restrict)
+  ingredientGroups IngredientGroup[]
+  steps            RecipeStep[]
+  nutrition        RecipeNutrition?
+
+  @@index([scope])
+  @@index([origin])
+  @@index([categoryId])
+  @@index([cuisineTypeId])
+  @@index([slug])
+  @@map("recipes")
+}
+
+model IngredientGroup {
+  id         String @id @default(uuid())
+  recipeId   String @map("recipe_id")
+  name       String
+  orderIndex Int    @map("order_index")
+
+  recipe      Recipe           @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredients IngredientItem[]
+
+  @@index([recipeId])
+  @@map("ingredient_groups")
+}
+
+model IngredientItem {
+  id         String   @id @default(uuid())
+  groupId    String   @map("group_id")
+  rawText    String   @map("raw_text")
+  amount     Decimal? @db.Decimal(10, 2)
+  unit       String?
+  name       String?
+  notes      String?
+  orderIndex Int      @map("order_index")
+
+  group IngredientGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([groupId])
+  @@map("ingredient_items")
+}
+
+model RecipeStep {
+  id          String  @id @default(uuid())
+  recipeId    String  @map("recipe_id")
+  stepNumber  Int     @map("step_number")
+  title       String?
+  instruction String  @db.Text
+  rawText     String  @db.Text @map("raw_text")
+
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@index([recipeId])
+  @@map("recipe_steps")
+}
+
+model RecipeNutrition {
+  id            String   @id @default(uuid())
+  recipeId      String   @unique @map("recipe_id")
+  serving       String?
+  calories      Int?
+  protein       Decimal? @db.Decimal(6, 2)
+  fat           Decimal? @db.Decimal(6, 2)
+  carbohydrates Decimal? @db.Decimal(6, 2)
+  notes         String?  @db.Text
+  rawText       String   @db.Text @map("raw_text")
+
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@map("recipe_nutritions")
+}
+
