@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { AppController } from './app.controller';
 import { PrismaModule } from './prisma/prisma.module';
 import { RecipesModule } from './modules/recipes/recipes.module';
 import { CategoriesModule } from './modules/categories/categories.module';
@@ -18,6 +19,7 @@ import { OriginsModule } from './modules/origins/origins.module';
     CuisineTypesModule,
     OriginsModule,
   ],
+  controllers: [AppController],
 })
 export class AppModule {}
 
