@@ -20,31 +20,31 @@ const prisma = new PrismaClient({
   }
 });
 
-const sampleImages = [
+const batchImages = [
   {
-    slug: 'rendang-daging-khas-minang',
-    localFile: 'C:/Users/Vstor/.gemini/antigravity/brain/11b6c7ef-165d-4b53-8bbe-6a65d11c9456/rendang_daging_sapi_khas_minang_1793265315840.jpg',
-    storageName: 'rendang-daging-khas-minang.jpg'
+    slug: 'soto-ayam-lamongan',
+    localFile: 'C:/Users/Vstor/.gemini/antigravity/brain/11b6c7ef-165d-4b53-8bbe-6a65d11c9456/soto_ayam_lamongan_1793267222173.jpg',
+    storageName: 'soto-ayam-lamongan.jpg'
   },
   {
-    slug: 'soto-betawi',
-    localFile: 'C:/Users/Vstor/.gemini/antigravity/brain/11b6c7ef-165d-4b53-8bbe-6a65d11c9456/soto_betawi_1793265359212.jpg',
-    storageName: 'soto-betawi.jpg'
+    slug: 'gado-gado-betawi',
+    localFile: 'C:/Users/Vstor/.gemini/antigravity/brain/11b6c7ef-165d-4b53-8bbe-6a65d11c9456/gado_gado_betawi_1793267224286.jpg',
+    storageName: 'gado-gado-betawi.jpg'
   },
   {
-    slug: 'tempe-mendoan-banyumas',
-    localFile: 'C:/Users/Vstor/.gemini/antigravity/brain/11b6c7ef-165d-4b53-8bbe-6a65d11c9456/tempe_mendoan_1793265401120.jpg',
-    storageName: 'tempe-mendoan-banyumas.jpg'
+    slug: 'sate-lilit-ikan-tenggiri',
+    localFile: 'C:/Users/Vstor/.gemini/antigravity/brain/11b6c7ef-165d-4b53-8bbe-6a65d11c9456/sate_lilit_ikan_tenggiri_1793267228414.jpg',
+    storageName: 'sate-lilit-ikan-tenggiri.jpg'
   },
   {
-    slug: 'es-pisang-ijo-makassar',
-    localFile: 'C:/Users/Vstor/.gemini/antigravity/brain/11b6c7ef-165d-4b53-8bbe-6a65d11c9456/es_pisang_ijo_1793265398684.jpg',
-    storageName: 'es-pisang-ijo-makassar.jpg'
+    slug: 'pempek-kapal-selam',
+    localFile: 'C:/Users/Vstor/.gemini/antigravity/brain/11b6c7ef-165d-4b53-8bbe-6a65d11c9456/pempek_kapal_selam_1793267239092.jpg',
+    storageName: 'pempek-kapal-selam.jpg'
   },
   {
-    slug: 'ayam-goreng-lengkuas',
-    localFile: 'C:/Users/Vstor/.gemini/antigravity/brain/11b6c7ef-165d-4b53-8bbe-6a65d11c9456/ayam_goreng_lengkuas_1793265407030.jpg',
-    storageName: 'ayam-goreng-lengkuas.jpg'
+    slug: 'nasi-goreng-kampung',
+    localFile: 'C:/Users/Vstor/.gemini/antigravity/brain/11b6c7ef-165d-4b53-8bbe-6a65d11c9456/nasi_goreng_kampung_1793267244799.jpg',
+    storageName: 'nasi-goreng-kampung.jpg'
   }
 ];
 
@@ -74,7 +74,7 @@ async function uploadToSupabaseStorage(filePath, storageName) {
 }
 
 async function main() {
-  console.log('Starting upload of 5 AI images to Supabase Storage bucket [recipes]...');
+  console.log(`Starting upload of ${batchImages.length} AI images to Supabase Storage bucket [recipes]...`);
 
   // Ensure local assets directory exists to keep an archive copy
   const projectAssetsDir = path.join(__dirname, '..', 'assets', 'images', 'recipes');
@@ -84,8 +84,13 @@ async function main() {
 
   const results = [];
 
-  for (const item of sampleImages) {
+  for (const item of batchImages) {
     console.log(`\nProcessing: ${item.slug}`);
+
+    // Verify local file exists
+    if (!fs.existsSync(item.localFile)) {
+      throw new Error(`Local file not found: ${item.localFile}`);
+    }
 
     // Copy to project assets
     const destPath = path.join(projectAssetsDir, item.storageName);
@@ -125,7 +130,7 @@ async function main() {
   // Verify by querying database
   console.log('\nVerifying updated recipes from database:');
   const verified = await prisma.recipe.findMany({
-    where: { slug: { in: sampleImages.map(s => s.slug) } },
+    where: { slug: { in: batchImages.map(s => s.slug) } },
     select: { id: true, title: true, slug: true, imageUrl: true }
   });
   console.dir(verified, { depth: null });
